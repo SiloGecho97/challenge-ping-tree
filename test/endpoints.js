@@ -3,7 +3,6 @@ process.env.NODE_ENV = 'test'
 var test = require('ava')
 var servertest = require('servertest')
 const { getTargets } = require('../lib/controllers/target.controller')
-// const redis = require('../lib/redis/index')
 var server = require('../lib/server')
 
 test.serial.cb('healthcheck', function (t) {
@@ -17,20 +16,13 @@ test.serial.cb('healthcheck', function (t) {
   })
 })
 
-test('async/await support', async t => {
-  const value = await Promise.resolve(true);
-  var url = '/api/targets'
-  t.true(value)
-});
-
-
 test.serial.cb('Get targets', function (t) {
   var url = '/api/targets'
-  getTargets().then(db_data => {
+  getTargets().then(dbData => {
     servertest(server(), url, { encoding: 'json' }, function (err, res) {
       t.falsy(err, 'no error')
       t.is(res.statusCode, 200, 'correct statusCode')
-      t.deepEqual(res.body.data, db_data, 'status is ok')
+      t.deepEqual(res.body.data, dbData, 'status is ok')
       t.end()
     })
   })
@@ -39,25 +31,30 @@ test.serial.cb('Get targets', function (t) {
 test.serial.cb('Post targets', function (t) {
   var url = '/api/targets'
   const target = {
-    url: "http://example.com",
-    value: "0.50",
-    maxAcceptsPerDay: "10",
+    url: 'http://targets.com',
+    value: '0.50',
+    maxAcceptsPerDay: '10',
     accept: {
       geoState: {
-        $in: ["ca", "ny"]
+        $in: ['ca', 'ny']
       },
       hour: {
-        $in: ["13", "14", "15"]
+        $in: ['13', '14', '15']
       }
     }
   }
-  servertest(server(), url, { encoding: 'json', method: 'POST', Headers: { target } }, function (err, res) {
-    t.falsy(err, 'no error')
-    t.is(res.statusCode, 200, 'correct statusCode')
-    t.deepEqual(res.body.data, db_data, 'status is ok')
+
+  const serverStream = servertest(server(), url, { encoding: 'json', method: 'POST' })
+  serverStream._write(JSON.stringify(target))
+  serverStream.on('end', (_err, data) => {
+    // t.falsy(err, 'no error')
+    t.is(data.statusCode, 200, 'correct statusCode')
+    // t.deepEqual(res.body.data, 'dbData', 'status is ok')
     t.end()
   })
-
+  serverStream.on('data', (_err, data) => {
+    console.log(data)
+  })
 })
 
 test.serial.cb('not found', function (t) {
@@ -70,4 +67,3 @@ test.serial.cb('not found', function (t) {
     t.end()
   })
 })
-
