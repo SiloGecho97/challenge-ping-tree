@@ -6,7 +6,7 @@
   "start": "node index.js",
   "dev": "nodemon index.js",
   "test": "nyc ava ./test/endpoints.js && npm run deps && standard",
-  "test-2": "node_modules/.bin/ava test/endpoints.js --watch --verbose",
+  "test-2": "node_modules/.bin/ava test/endpoints.js --watch --verbose -T '3m' ",
   "standard": "npx standard",
   "deps": "depcheck ."
  },

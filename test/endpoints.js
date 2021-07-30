@@ -25,7 +25,6 @@ test('async/await support', async t => {
 
 
 test.serial.cb('Get targets', function (t) {
-  console.log(t.context.data)
   var url = '/api/targets'
   getTargets().then(db_data => {
     servertest(server(), url, { encoding: 'json' }, function (err, res) {
@@ -34,6 +33,29 @@ test.serial.cb('Get targets', function (t) {
       t.deepEqual(res.body.data, db_data, 'status is ok')
       t.end()
     })
+  })
+})
+
+test.serial.cb('Post targets', function (t) {
+  var url = '/api/targets'
+  const target = {
+    url: "http://example.com",
+    value: "0.50",
+    maxAcceptsPerDay: "10",
+    accept: {
+      geoState: {
+        $in: ["ca", "ny"]
+      },
+      hour: {
+        $in: ["13", "14", "15"]
+      }
+    }
+  }
+  servertest(server(), url, { encoding: 'json', method: 'POST', Headers: { target } }, function (err, res) {
+    t.falsy(err, 'no error')
+    t.is(res.statusCode, 200, 'correct statusCode')
+    t.deepEqual(res.body.data, db_data, 'status is ok')
+    t.end()
   })
 
 })
