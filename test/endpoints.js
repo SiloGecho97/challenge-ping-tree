@@ -163,6 +163,31 @@ test.serial.cb('should update by id', function (t) {
   }
 })
 
+test.serial.cb('update target with id', function (t) {
+  const url = '/api/target'
+  const opts = { method: 'POST', encoding: 'json' }
+  const target = {
+    url: 'http://targets.com',
+    value: '0.90',
+    maxAcceptsPerDay: '10',
+    accept: {
+      geoState: {
+        $in: ['ca', 'ny']
+      },
+      hour: {
+        $in: ['13', '14', '15']
+      }
+    }
+  }
+
+  // create target
+  servertest(server(), url + '/123', opts, onResponse).end(JSON.stringify(target))
+  t.plan(1)
+  function onResponse (_err, res) {
+    t.is(res.statusCode, 400, 'correct statusCode')
+    t.end()
+  }
+})
 /**
  * Test Route Decision API
  */
