@@ -16,7 +16,9 @@ test.serial.cb('healthcheck', function (t) {
     t.end()
   })
 })
-
+/**
+ * Get Targets
+ */
 test.serial.cb('Get targets', function (t) {
   var url = '/api/targets'
   getTargets().then(dbData => {
@@ -29,7 +31,9 @@ test.serial.cb('Get targets', function (t) {
   })
 })
 
-
+/**
+ * Test Get Target by Id 
+ */
 
 test.serial.cb('should get values by id', function (t) {
   var post_url = '/api/targets'
@@ -64,7 +68,7 @@ test.serial.cb('should get values by id', function (t) {
 })
 
 /**
- * Test Get by Id and Post
+ * Test Post by id 
  */
 test.serial.cb('should post values', function (t) {
   var url = '/api/targets'
@@ -99,7 +103,56 @@ test.serial.cb('should post values', function (t) {
 })
 
 /**
- * Test Get by Id and Post
+ * Test Update post
+ */
+
+test.serial.cb('should update by id', function (t) {
+  const post_url = '/api/targets'
+  const opts = { method: 'POST', encoding: 'json' }
+  const update_url = '/api/target'
+  const target = {
+    url: 'http://targets.com',
+    value: '0.50',
+    maxAcceptsPerDay: '10',
+    accept: {
+      geoState: {
+        $in: ['ca', 'ny']
+      },
+      hour: {
+        $in: ['13', '14', '15']
+      }
+    }
+  }
+  const target2 = {
+    url: 'http://targets.com',
+    value: '0.90',
+    maxAcceptsPerDay: '10',
+    accept: {
+      geoState: {
+        $in: ['ca', 'ny']
+      },
+      hour: {
+        $in: ['13', '14', '15']
+      }
+    }
+  }
+
+  servertest(server(), post_url, opts, onResponse)
+    .end(JSON.stringify(target))
+
+  function onResponse(err, res) {
+
+    servertest(server(), `${update_url}/${res.body.data.id}`, opts, onResponse2)
+      .end(JSON.stringify(target2))
+    function onResponse2(err, resp) {
+      t.is(res.statusCode, 200, 'correct statusCode')
+      t.is(JSON.stringify(resp.body.data), JSON.stringify(res.body.data), 'Correct Data')
+      t.end()
+    }
+  }
+})
+/**
+ * Test Route Decision API
  */
 test.serial.cb('Route decision', function (t) {
   var url = '/route'
@@ -115,17 +168,14 @@ test.serial.cb('Route decision', function (t) {
     .end(JSON.stringify(postData))
 
   function onResponse(err, res) {
-    // t.ifError(err, 'no error')
     t.is(res.statusCode, 200, 'correct statusCode')
-    t.is(err, 200, 'correct statusCode')
-
     t.end()
-
-
   }
 })
 
-
+/**
+ * Not Found Test
+ */
 test.serial.cb('not found', function (t) {
   var url = '/notfound'
   servertest(server(), url, { encoding: 'json' }, function (err, res) {
