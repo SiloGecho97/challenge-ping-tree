@@ -2,7 +2,7 @@ process.env.NODE_ENV = 'test'
 
 var test = require('ava')
 var servertest = require('servertest')
-const { getTargets } = require('../lib/controllers/target.controller')
+const { getTargets, getTargetCallback } = require('../lib/controllers/target.controller')
 var server = require('../lib/server')
 const Stream = require('stream')
 const Targets = require('../lib/models')
@@ -56,7 +56,10 @@ test.serial.cb('should get values by id', function (t) {
 
   servertest(server(), post_url, post_opts, onResponse)
     .end(JSON.stringify(target))
+  //test plan 
+  t.plan(2)
 
+  // test
   function onResponse(err, res) {
     // t.ifError(err, 'no error')
     t.is(res.statusCode, 200, 'correct statusCode')
@@ -73,6 +76,8 @@ test.serial.cb('should get values by id', function (t) {
 test.serial.cb('should post values', function (t) {
   var url = '/api/targets'
   var opts = { method: 'POST', encoding: 'json' }
+  var get_url = '/api/target'
+  var get_opts = { method: 'GET', encoding: 'json' }
   const target = {
     url: 'http://targets.com',
     value: '0.50',
@@ -86,18 +91,19 @@ test.serial.cb('should post values', function (t) {
       }
     }
   }
-  t.plan(1)
+  //test plan 3
+  t.plan(3)
+  // post target 
   servertest(server(), url, opts, onResponse)
     .end(JSON.stringify(target))
 
+  //post target callback function
   function onResponse(err, res) {
-    // t.ifError(err, 'no error')
     t.is(res.statusCode, 200, 'correct statusCode')
-    t.end()
-    const Target = new Targets()
-    Target.getTargetCallback(res.body.data.id, (data) => {
-      // t.is(JSON.stringify(res.body.data), JSON.stringify(data), 'Correct Data')
-
+    servertest(server(), `${get_url}/${res.body.data.id}`, get_opts, (err, resp) => {
+      t.is(resp.statusCode, 200, "Status code passed")
+      t.is(JSON.stringify(resp.body.data), JSON.stringify(resp.body.data), 'Correct Data')
+      t.end()
     })
   }
 })
@@ -110,6 +116,7 @@ test.serial.cb('should update by id', function (t) {
   const post_url = '/api/targets'
   const opts = { method: 'POST', encoding: 'json' }
   const update_url = '/api/target'
+  // create target body
   const target = {
     url: 'http://targets.com',
     value: '0.50',
@@ -123,6 +130,7 @@ test.serial.cb('should update by id', function (t) {
       }
     }
   }
+  //update target body
   const target2 = {
     url: 'http://targets.com',
     value: '0.90',
@@ -136,21 +144,27 @@ test.serial.cb('should update by id', function (t) {
       }
     }
   }
+  //plan for 3 assertion
+  t.plan(3)
 
+  // create target
   servertest(server(), post_url, opts, onResponse)
     .end(JSON.stringify(target))
 
   function onResponse(err, res) {
-
-    servertest(server(), `${update_url}/${res.body.data.id}`, opts, onResponse2)
+    //update target
+    servertest(server(), `${update_url}/${res.body.data.id}`, opts, onUpdateResponse)
       .end(JSON.stringify(target2))
-    function onResponse2(err, resp) {
+
+    function onUpdateResponse(err, resp) {
       t.is(res.statusCode, 200, 'correct statusCode')
-      t.is(JSON.stringify(resp.body.data), JSON.stringify(res.body.data), 'Correct Data')
+      t.is(target2.value, resp.body?.data.value)
+      t.not(res.body.data.value, resp.body.data.value)
       t.end()
     }
   }
 })
+
 /**
  * Test Route Decision API
  */
@@ -163,11 +177,12 @@ test.serial.cb('Route decision', function (t) {
     timestamp: "2018-07-19T23:28:59.513Z"
   }
 
-  t.plan(1)
+  t.plan(2)
   servertest(server(), url, opts, onResponse)
     .end(JSON.stringify(postData))
 
   function onResponse(err, res) {
+    t.truthy(!(res.body.data))
     t.is(res.statusCode, 200, 'correct statusCode')
     t.end()
   }
