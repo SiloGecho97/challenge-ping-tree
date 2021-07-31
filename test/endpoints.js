@@ -67,7 +67,6 @@ test.serial.cb('should get values by id', function (t) {
     })
   }
 })
-
 /**
  * Test Post by id
  */
@@ -77,7 +76,7 @@ test.serial.cb('should post values', function (t) {
   var getUrl = '/api/target'
   var getOpts = { method: 'GET', encoding: 'json' }
   const target = {
-    url: 'http://targets.com',
+    url: 'http://target.org',
     value: '0.50',
     maxAcceptsPerDay: '10',
     accept: {
@@ -106,6 +105,23 @@ test.serial.cb('should post values', function (t) {
   }
 })
 
+// Test post with body
+test.serial.cb('shouldnt post values', function (t) {
+  var url = '/api/targets'
+  var opts = { method: 'POST', encoding: 'json' }
+
+  // test plan 3
+  t.plan(1)
+  // post target
+  servertest(server(), url, opts, onResponse)
+    .end()
+
+  // post target callback function
+  function onResponse (_err, res) {
+    t.is(res.statusCode, 422, 'correct statusCode')
+    t.end()
+  }
+})
 /**
  * Test Update post
  */
@@ -163,7 +179,7 @@ test.serial.cb('should update by id', function (t) {
   }
 })
 
-test.serial.cb('update target with id', function (t) {
+test.serial.cb('update target without invalid id', function (t) {
   const url = '/api/target'
   const opts = { method: 'POST', encoding: 'json' }
   const target = {
