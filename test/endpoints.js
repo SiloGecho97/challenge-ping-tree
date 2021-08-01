@@ -2,8 +2,8 @@ process.env.NODE_ENV = 'test'
 
 var test = require('ava')
 var servertest = require('servertest')
-const { getTargets } = require('../lib/controllers/target.controller')
 var server = require('../lib/server')
+const { getTargets } = require('../lib/services/target.service')
 // Test healch check
 test.serial.cb('healthcheck', function (t) {
   var url = '/health'
